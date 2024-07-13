@@ -40,7 +40,9 @@ class CodeEditor
         ["Fx65", "LD Vx, [I]", "Read registers V0 through Vx from memory starting at location I."],
     ]
 
+    static HEADERS = ["line", "memory (dec)", "memory (hex)", "sprite", "instruction", "comment", "notes"]
     static DEFAULT_COMMENT = "this does nothing right now"
+    static DEFAULT_NOTE = "nice code"
 
     constructor()
     {
@@ -135,7 +137,7 @@ class CodeEditor
 
         const head = document.createElement("thead");
         const row = document.createElement("tr");
-        const headers = ["line", "memory (dec)", "memory (hex)", "sprite", "instruction", "comment", "notes"]
+        const headers = CodeEditor.HEADERS
 
         headers.forEach(function(headerText) {
             const th = document.createElement("th");
@@ -159,7 +161,7 @@ class CodeEditor
 
     }
 
-    addNewLine()
+    addNewLine(val = "")
     {
         if(this.lines + this.memoryStart > this.memoryEnd)
         {
@@ -176,9 +178,9 @@ class CodeEditor
         newRow.cells[1].textContent = (this.memoryStart + (this.lines * 2)).toString()
         newRow.cells[2].textContent = "0x" + (this.memoryStart + (this.lines * 2)).toString(16)
         newRow.cells[3].innerHTML = '<input onclick="editor.markAsSprite(this)" type="checkbox">'
-        newRow.cells[4].innerHTML = '<input oninput="editor.parseContent(this);" onclick="editor.selectLine(this);" type="text"></div>'
+        newRow.cells[4].innerHTML = '<input oninput="editor.parseContent(this);" onclick="editor.selectLine(this);" type="text" value="'+val+'"></div>'
         newRow.cells[5].textContent = CodeEditor.DEFAULT_COMMENT
-        newRow.cells[6].innerHTML = '<input onclick="editor.selectLine(this);" type="text" value="// my notes">'
+        newRow.cells[6].innerHTML = '<input onclick="editor.selectLine(this);" type="text" value="'+CodeEditor.DEFAULT_NOTE+'">'
         this.lines += 1
         this.currentLine +=1
 
@@ -199,6 +201,8 @@ class CodeEditor
 
         newRow.cells[4].children[0].focus();
 
+        this.parseContent(newRow.cells[4].children[0])
+
         for(let i = 0; i < this.lines; i++)
         {
             this.table.rows[i+1].children[0].innerHTML = i + 1
@@ -212,11 +216,11 @@ class CodeEditor
         const row = this.table.rows[this.currentLine];
         const obj = row.children[4].children[0]
         
-        if(obj.value == "" && this.lines > 1 && this.toRemove[this.currentLine] == false)
+        if(obj.value == "" && this.lines > 1 && this.currentLine > 1 && this.toRemove[this.currentLine] == false)
         {
             this.toRemove[this.currentLine] = true
         }
-        else if(obj.value == "" && this.lines > 1 && this.toRemove[this.currentLine] == true)
+        else if(obj.value == "" && this.lines > 1 && this.currentLine > 1 && this.toRemove[this.currentLine] == true)
         {
             this.toRemove[this.currentLine] = false
             obj.parentNode.parentNode.remove()
@@ -355,6 +359,7 @@ class CodeEditor
             {
                 obj.parentNode.classList.remove("error")
             }
+            this.updateComment(obj);
         }
 
         if(obj.value != "")
@@ -362,7 +367,7 @@ class CodeEditor
             this.toRemove[line] = false
         }
 
-        this.updateComment(obj);
+        
     }
 
     updateComment(input)
@@ -413,6 +418,159 @@ class CodeEditor
                 comment.innerHTML = CodeEditor.DEFAULT_COMMENT
             }
         }
+    }
+
+
+    openMD(event) {
+        const file = event.target.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const arrayBuffer = e.target.result;
+                console.log(arrayBuffer);
+            };
+            reader.readAsArrayBuffer(file);
+        }
+    }
+
+    openROM(event) {
+        const file = event.target.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const arrayBuffer = e.target.result;
+                const byteArray = new Uint8Array(arrayBuffer);
+
+                editor.lines = 0;
+                editor.currentLine = 0;
+                editor.table.children[1].innerHTML = ""
+                
+
+                for(let i = 0; i < byteArray.length; i+=2)
+                {   
+                    editor.addNewLine((byteArray[i]).toString(16).padStart(2,'0') + byteArray[i+1].toString(16).padStart(2,'0'))
+                }
+            };
+            reader.readAsArrayBuffer(file);
+        }
+    }
+
+    testROM()
+    {
+
+    }
+
+
+    grabEditorContent()
+    {
+        let bytes = []
+        let content =  this.table.children[1]
+        for(let i = 0; i < content.children.length; i++)
+        {
+            let val = content.children[i].children[4].children[0].value
+            if(content.children[i].children[3].children[0].checked)
+            {
+                val = parseInt(val.replace(/\s/g, ''),2).toString(16).padStart(4, '0');
+            }
+            let a = "0x" + val.substring(0, 2)
+            let b = "0x" + val.substring(val.length - 2);
+            bytes.push(a)
+            bytes.push(b)
+        }
+        const byteArray = new Uint8Array(bytes.map(hex => parseInt(hex, 16)));
+        return byteArray
+    }
+
+    createDownload(blob, format)
+    {
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(blob);
+        link.download = 'output' + format;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    }
+
+    saveAsMD() {
+        let content = this.table.children[1];
+        let headers = CodeEditor.HEADERS;
+        let columnCount = headers.length;
+    
+        // Initialize spaces array with minimum width 12 for each column
+        let spaces = Array(columnCount).fill(12);
+    
+        // Function to retrieve row data
+        const getRowData = (row) => [
+            row.children[0].innerHTML,
+            row.children[1].innerHTML,
+            row.children[2].innerHTML,
+            row.children[3].children[0].checked ? "☑" : "☐",
+            row.children[4].children[0].value,
+            row.children[5].innerHTML,
+            row.children[6].children[0].value
+        ];
+    
+        // Calculate maximum width for each column
+        for (let row of content.children) {
+            let data = getRowData(row);
+            data.forEach((cell, index) => {
+                spaces[index] = Math.max(spaces[index], cell.length);
+            });
+        }
+    
+        // Generate markdown for headers
+        const generateHeaderRow = () => {
+            return headers.map((header, index) => {
+                let space = spaces[index] + (index === 0 || index === columnCount - 1 ? 1 : 2);
+                return "|" + this.centerString(header, space);
+            }).join('') + "|";
+        };
+    
+        // Generate markdown for delimiter row
+        const generateDelimiterRow = () => {
+            return headers.map((_, index) => {
+                let dashCount = spaces[index];
+                if (index === 0) return `|:${'-'.repeat(dashCount)}`;
+                if (index === columnCount - 1) return `|${'-'.repeat(dashCount)}:|`;
+                return `|:${'-'.repeat(dashCount)}:`;
+            }).join('');
+        };
+    
+        // Generate markdown for data rows
+        const generateDataRows = () => {
+            return Array.from(content.children).map(row => {
+                let data = getRowData(row);
+                return data.map((cell, index) => {
+                    let space = spaces[index] + (index === 0 || index === data.length - 1 ? 1 : 2);
+                    return "|" + this.centerString(cell, space);
+                }).join('') + "|";
+            }).join('\n');
+        };
+    
+        let mdPre = generateHeaderRow() + "\n";
+        let mdMiddle = generateDelimiterRow() + "\n";
+        let mdEnd = generateDataRows() + "\n";
+    
+        let md = mdPre + mdMiddle + mdEnd;
+        const blob = new Blob([md], { type: 'text/plain' });
+        this.createDownload(blob, '.ch8.md');
+    }
+    
+    centerString(str, width) {
+        if (str.length >= width) return str.substring(0, width);
+        let totalPadding = width - str.length;
+        let leftPadding = Math.floor(totalPadding / 2);
+        let rightPadding = totalPadding - leftPadding;
+        return ' '.repeat(leftPadding) + str + ' '.repeat(rightPadding);
+    }
+    
+
+
+    saveAsROM()
+    {
+        const bytes = this.grabEditorContent()
+        const blob = new Blob([bytes], { type: 'application/octet-stream' });
+        this.createDownload(blob, '.ch8')
     }
 
 }

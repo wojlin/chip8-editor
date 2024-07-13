@@ -13,10 +13,13 @@
                 <p>Context Actions</p>
                 <hr>
                 <div id="context">
-                    <button>Open ROM</button>
-                    <button>Test ROM</button>
-                    <button>Save as readable</button>
-                    <button>Save as ROM</button>
+                    <button onclick="document.getElementById('md-input').click();">Open MD</button>
+                    <button onclick="document.getElementById('rom-input').click();">Open ROM</button>
+                    <button onclick="editor.testROM();">Test ROM</button>
+                    <button onclick="editor.saveAsMD();">Save as MD</button>
+                    <button onclick="editor.saveAsROM();">Save as ROM</button>
+                    <input id="rom-input" type="file" accept=".ch8" onchange="editor.openROM(event);" hidden>
+                    <input id="md-input" type="file" accept=".ch8.md" onchange="editor.openMD(event);" hidden>
                 </div>
                 <p>Instructions</p>
                 <hr>
