@@ -26,7 +26,7 @@ class CodeEditor
         ["Annn", "LD I, addr", "Set I = nnn."],
         ["Bnnn", "JP V0, addr", "Jump to location nnn + V0."],
         ["Cxkk", "RND Vx, byte", "Set Vx = random byte AND kk."],
-        ["Dxyn", "DRW Vx, Vy, nibble", "Display n-byte sprite starting at memory location I at (Vx, Vy), set VF = collision."],
+        ["Dxyn", "DRW Vx, Vy, nibble", "Display n-byte sprite starting at memory location I at (Vx, Vy)"],
         ["Ex9E", "SKP Vx", "Skip next instruction if key with the value of Vx is pressed."],
         ["ExA1", "SKNP Vx", "Skip next instruction if key with the value of Vx is not pressed."],
         ["Fx07", "LD Vx, DT", "Set Vx = delay timer value."],
@@ -40,12 +40,15 @@ class CodeEditor
         ["Fx65", "LD Vx, [I]", "Read registers V0 through Vx from memory starting at location I."],
     ]
 
+    static DEFAULT_COMMENT = "this does nothing right now"
+
     constructor()
     {
         this.table = document.getElementById("editor-content");
         this.helpers = document.getElementById("helpers")
         this.lines = 0;
         this.memoryStart = 512
+        this.memoryEnd = 4096
         this.currentLine = 0;
 
         this.toRemove = {}
@@ -53,6 +56,56 @@ class CodeEditor
         this.addHeader();
         this.addNewLine();
         this.addHelpers();
+
+        document.addEventListener('click', function(event) 
+        {
+            const currentLine = editor.currentLine;
+            const row = editor.table.children[1].children[currentLine-1]
+            if(document.activeElement === row.children[6].children[0])
+            {
+                
+            }else
+            {
+                row.children[4].children[0].focus()
+            }
+            
+        });
+
+        document.addEventListener('keyup', function(event) {
+            if (event.key === 'Enter') {
+                editor.addNewLine();
+            }
+            if (event.key === 'Backspace') {
+                editor.removeLine();
+            }
+            if (event.key === 'ArrowUp') {
+                editor.moveCursor(true)
+            }
+            if (event.key === 'ArrowDown') {
+                editor.moveCursor(false)
+            }
+        });
+
+    }
+
+    useInstruction(button)
+    {
+        const row = this.table.children[1].children[this.currentLine - 1];
+        const input = row.children[4].children[0]
+
+        const code = button.children[0].innerHTML;
+        const name = button.children[1].innerHTML;
+        const desc = button.children[2].innerHTML;
+        
+        let instruction = code;
+        instruction = instruction.replace(/[x]/g, '0');
+        instruction = instruction.replace(/[y]/g, '1');
+        instruction = instruction.replace(/[k]/g, '2');
+        instruction = instruction.replace(/[n]/g, '3');
+
+        console.log(code,name,desc, instruction)
+
+        input.value = instruction
     }
 
     addHelpers()
@@ -72,6 +125,7 @@ class CodeEditor
             button.appendChild(code)
             button.appendChild(name)
             button.appendChild(desc)
+            button.onclick = function() {editor.useInstruction(button);};
             this.helpers.appendChild(button)
         }
     }
@@ -89,6 +143,14 @@ class CodeEditor
             row.appendChild(th);
         });
 
+        row.cells[0].classList.add("line-column")
+        row.cells[1].classList.add("dec-column")
+        row.cells[2].classList.add("hex-column")
+        row.cells[3].classList.add("sprite-column")
+        row.cells[4].classList.add("instruction-column")
+        row.cells[5].classList.add("comment-column")
+        row.cells[6].classList.add("notes-column")
+
         head.appendChild(row);
         this.table.insertBefore(head, this.table.firstChild);
 
@@ -99,6 +161,12 @@ class CodeEditor
 
     addNewLine()
     {
+        if(this.lines + this.memoryStart > this.memoryEnd)
+        {
+            console.error("max memory adress reached!")
+            return
+        }
+
         const newRow = document.createElement("tr");
         for (var i = 0; i < 7; i++) {
             const newCell = newRow.insertCell(i);
@@ -109,7 +177,7 @@ class CodeEditor
         newRow.cells[2].textContent = "0x" + (this.memoryStart + (this.lines * 2)).toString(16)
         newRow.cells[3].innerHTML = '<input onclick="editor.markAsSprite(this)" type="checkbox">'
         newRow.cells[4].innerHTML = '<input oninput="editor.parseContent(this);" onclick="editor.selectLine(this);" type="text"></div>'
-        newRow.cells[5].textContent = "// this does nothing right now"
+        newRow.cells[5].textContent = CodeEditor.DEFAULT_COMMENT
         newRow.cells[6].innerHTML = '<input onclick="editor.selectLine(this);" type="text" value="// my notes">'
         this.lines += 1
         this.currentLine +=1
@@ -130,6 +198,13 @@ class CodeEditor
         tbody.insertBefore(newRow, before);
 
         newRow.cells[4].children[0].focus();
+
+        for(let i = 0; i < this.lines; i++)
+        {
+            this.table.rows[i+1].children[0].innerHTML = i + 1
+            this.table.rows[i+1].children[1].innerHTML = this.memoryStart + (i*2)
+            this.table.rows[i+1].children[2].innerHTML = "0x" + (this.memoryStart + (i*2)).toString(16)
+        }
     }
 
     removeLine(index)
@@ -203,6 +278,8 @@ class CodeEditor
             input.value = hexString
             comment.innerHTML = "//"
         }
+
+        this.parseContent(input)
     }
 
     selectLine(obj)
@@ -236,6 +313,7 @@ class CodeEditor
 
     parseContent(obj)
     {
+        obj.value = obj.value.toUpperCase();
         
         const row = obj.parentNode.parentNode;
         const isSprite = row.children[3].children[0].checked
@@ -246,6 +324,11 @@ class CodeEditor
 
         if(isSprite)
         {
+            if (obj.parentNode.classList.contains("error")) 
+            {
+                obj.parentNode.classList.remove("error")
+            }
+
             obj.maxLength = 17;
     
             let cleanedInput = obj.value.replace(/[^01]/g, '0');
@@ -263,6 +346,15 @@ class CodeEditor
         else
         {
             obj.maxLength = 4;
+
+            if(obj.value.length < 4)
+            {
+                obj.parentNode.classList.add("error")
+            }
+            else
+            {
+                obj.parentNode.classList.remove("error")
+            }
         }
 
         if(obj.value != "")
@@ -277,10 +369,11 @@ class CodeEditor
     {
         const row = input.parentNode.parentNode;
         const comment = row.children[5]
-
+        const isSprite = row.children[4].children[0].checked;
+        const value = input.value;
         console.log(input.value)
         
-        if(row.children[4].children[0].checked)
+        if(isSprite)
         {   
             
             const binaryString = input.value.replace(/\s+/g, '')
@@ -297,29 +390,31 @@ class CodeEditor
             comment.innerHTML = commentString
             comment.style.fontSize = "0.9vh";
         }
+        else
+        {
+            let found = false
+            for(let i = 0; i < CodeEditor.INSTRUCTIONS.length; i++)
+            {   
+                let regex = new RegExp("^" + CodeEditor.INSTRUCTIONS[i][0].replace(/[knxy]/g, '.') + "$");
+                if(regex.test(input.value))
+                {
+                    let valid =  CodeEditor.INSTRUCTIONS[i][2];
+                    valid = valid.replace("Vx", 'V'+value[1])
+                    valid = valid.replace("Vy", 'V'+value[2])
+                    valid = valid.replace("nnn", value[1] + value[2] + value[3])
+                    valid = valid.replace("kk", value[2] + value[3])
+                    //valid = valid.replace("n", value[3]) TODO : find out how to replace the needed n and not every
+                    comment.innerHTML = valid
+                    found = true
+                }
+            }
+            if(!found)
+            {
+                comment.innerHTML = CodeEditor.DEFAULT_COMMENT
+            }
+        }
     }
 
 }
 
 var editor = new CodeEditor();
-
-document.addEventListener('click', function(event) 
-{
-    const currentLine = editor.currentLine;
-    editor.table.children[1].children[currentLine-1].children[4].children[0].focus()
-});
-
-document.addEventListener('keyup', function(event) {
-    if (event.key === 'Enter') {
-        editor.addNewLine();
-    }
-    if (event.key === 'Backspace') {
-        editor.removeLine();
-    }
-    if (event.key === 'ArrowUp') {
-        editor.moveCursor(true)
-    }
-    if (event.key === 'ArrowDown') {
-        editor.moveCursor(false)
-    }
-});
