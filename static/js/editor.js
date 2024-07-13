@@ -161,7 +161,7 @@ class CodeEditor
 
     }
 
-    addNewLine(val = "")
+    addNewLine(inst = "", comment = CodeEditor.DEFAULT_COMMENT, note = CodeEditor.DEFAULT_NOTE, isSprite = false)
     {
         if(this.lines + this.memoryStart > this.memoryEnd)
         {
@@ -177,10 +177,10 @@ class CodeEditor
         newRow.cells[0].textContent = (this.lines + 1).toString()
         newRow.cells[1].textContent = (this.memoryStart + (this.lines * 2)).toString()
         newRow.cells[2].textContent = "0x" + (this.memoryStart + (this.lines * 2)).toString(16)
-        newRow.cells[3].innerHTML = '<input onclick="editor.markAsSprite(this)" type="checkbox">'
-        newRow.cells[4].innerHTML = '<input oninput="editor.parseContent(this);" onclick="editor.selectLine(this);" type="text" value="'+val+'"></div>'
-        newRow.cells[5].textContent = CodeEditor.DEFAULT_COMMENT
-        newRow.cells[6].innerHTML = '<input onclick="editor.selectLine(this);" type="text" value="'+CodeEditor.DEFAULT_NOTE+'">'
+        newRow.cells[3].innerHTML = '<input onclick="editor.markAsSprite(this)" type="checkbox"' + (isSprite ? 'checked' : '') +'>'
+        newRow.cells[4].innerHTML = '<input oninput="editor.parseContent(this);" onclick="editor.selectLine(this);" type="text" value="'+inst+'"></div>'
+        newRow.cells[5].textContent = comment
+        newRow.cells[6].innerHTML = '<input onclick="editor.selectLine(this);" type="text" value="'+note+'">'
         this.lines += 1
         this.currentLine +=1
 
@@ -404,11 +404,11 @@ class CodeEditor
                 if(regex.test(input.value))
                 {
                     let valid =  CodeEditor.INSTRUCTIONS[i][2];
-                    valid = valid.replace("Vx", 'V'+value[1])
-                    valid = valid.replace("Vy", 'V'+value[2])
-                    valid = valid.replace("nnn", value[1] + value[2] + value[3])
-                    valid = valid.replace("kk", value[2] + value[3])
-                    //valid = valid.replace("n", value[3]) TODO : find out how to replace the needed n and not every
+                    valid = valid.replace("Vx", 'V'+parseInt(value[1], 16))
+                    valid = valid.replace("Vy", 'V'+parseInt(value[2], 16))
+                    valid = valid.replace("nnn", +parseInt(value[1] + value[2] + value[3],16))
+                    valid = valid.replace("kk", +parseInt(value[2] + value[3],16))
+                    valid = valid.replace("n-byte", +parseInt(value[3],16) + "-byte") 
                     comment.innerHTML = valid
                     found = true
                 }
@@ -420,14 +420,42 @@ class CodeEditor
         }
     }
 
+    parseMarkdown(mdContent) {
+        console.log(mdContent)
+        const lines = mdContent.split('\n');
+        const headers = lines[0].split('|').map(header => header.trim()).filter(header => header);
+        const dataLines = lines.slice(2); // Skip header and delimiter lines
+
+        const data = dataLines.map(line => {
+            const cells = line.split('|').map(cell => cell.trim()).filter(cell => cell);
+            let rowData = {};
+            headers.forEach((header, index) => {
+                rowData[header] = cells[index];
+            });
+            return rowData;
+        });
+
+        return data;
+    }
 
     openMD(event) {
         const file = event.target.files[0];
         if (file) {
             const reader = new FileReader();
             reader.onload = function(e) {
-                const arrayBuffer = e.target.result;
-                console.log(arrayBuffer);
+                const file = e.target.result;
+                const mdContent = new TextDecoder().decode(file);
+                const data = editor.parseMarkdown(mdContent)
+                console.log(data)
+
+                editor.table.children[1].innerHTML = "";
+                editor.lines = 0
+                editor.currentLine = 0
+
+                for(let i = 0; i < data.length - 1; i++)
+                {
+                    editor.addNewLine(data[i]["instruction"], data[i]["comment"], data[i]["note"], (data[i]["sprite"] == '☐' ? false : true ))
+                }
             };
             reader.readAsArrayBuffer(file);
         }
@@ -457,7 +485,7 @@ class CodeEditor
 
     testROM()
     {
-
+        console.log("opening testing tab")
     }
 
 
