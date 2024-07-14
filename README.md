@@ -3,7 +3,7 @@
 Welcome to the CHIP-8 IDE repository! This project provides a robust development environment for coding, testing, and debugging CHIP-8 programs efficiently. Built using JavaScript, HTML, and CSS, this IDE is designed to enhance the development experience for CHIP-8 enthusiasts and developers.
 
 ## Access the CHIP-8 IDE
-You can access and use the CHIP-8 IDE directly [here](https://wojlin.github.io/chip8-ide/).
+You can access and use the CHIP-8 IDE directly [here](https://wojlin.github.io/chip8-editor/).
 
 ## Description
 The CHIP-8 IDE simplifies the creation and testing of CHIP-8 programs. It features real-time syntax highlighting, a step-by-step debugger, and seamless integration with CHIP-8 emulators for instant testing. Export your projects as binary files or generate Markdown documentation directly from your codebase. Interactive comments and annotations dynamically update to reflect binary operations, aiding in code comprehension and collaboration.
