@@ -1,11 +1,12 @@
 :root
 {
-    --editor: #1B2225;
-    --border: #101416;;
-    --side: #101416;
-    --buttons: #1b2225;
-    --top: #101416
-    ;
+    --editor: #1e1e1e;
+    --border: #3e3e42;
+    --side: #252526;
+    --buttons: #3e3e42;
+    --top: #007acc;
+    --separators: #3e3e42;
+    --separator-size: 5px;
 }
 
 *
@@ -31,7 +32,7 @@ html, body
 #menu
 {
     background-color: var(--top);
-    border-bottom: solid 0.5vh black;
+    border-bottom: solid var(--separator-size) var(--separators);
     padding:0.5vh;
     height: 2vh;
 }
@@ -53,15 +54,17 @@ html, body
 #editor
 {
     width: 100%;
+    height: 98vh;
     color:white;
     font-size: 2vh; 
+    display: flex;
 }
 
 #editor-side
 {
     display: table-cell;
     background-color: var(--side);
-    min-width: 20vw;
+    min-width: 15ch;
     height:98vh;
 }
 
@@ -75,13 +78,43 @@ html, body
     background: var(--editor);
     overflow: hidden;
     height: 98vh;
+    position: relative;
 }
+
+
+#editor-separator {
+    cursor: col-resize;
+    background-color: var(--separators);
+    width: var(--separator-size);
+    height: 100%;
+
+    /* Prevent the browser's built-in drag from interfering */
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+}
+
+#editor-main-separator {
+    cursor: n-resize;
+    background-color: var(--separators);
+    width: 100%;
+    height: var(--separator-size);
+
+    /* Prevent the browser's built-in drag from interfering */
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+    display: none;
+}
+
+
 
 #editor-wrapper {
 	display: block;
 	overflow: hidden;
 	max-height: 95vh;
 	overflow-y: auto;
+    position: relative;
 }
 
 #editor-content
@@ -105,7 +138,7 @@ html, body
 
 #editor-content > thead > tr > th
 {
-    border-right: solid var(--border) 0.5vh;
+    border-right: solid var(--border) var(--separator-size);
     padding-left: 1vh;
     padding-right: 1vh;
     border-spacing: 0;
@@ -156,7 +189,7 @@ html, body
 
 #editor-content > tbody > tr > td
 {
-    border-right: solid var(--border) 0.5vh;
+    border-right: solid var(--border) var(--separator-size);
     padding-left: 1vh;
     padding-right: 1vh;
     border-spacing: 0;
@@ -289,4 +322,160 @@ html, body
 .error
 {
     background-color: rgba(255,0,0,0.3);
+}
+
+
+
+#debugger
+{
+    bottom: 0;
+    right:0;
+    left:0;
+    background-color: var(--editor);
+    padding:1vh;
+    display: none;
+    position: relative;
+}
+
+#debugger p
+{
+    text-align: center;
+    font-size: 1.2vh;
+}
+
+#debugger-other-panel > table
+{
+    display: inline !important;
+    margin: 1vh;
+}
+
+#debugger-other-panel > div
+{
+    margin-left:2vh;
+}
+
+#debugger-memory-panel, #debugger-stack-panel, #debugger-registers-panel, #debugger-other-panel
+{
+    display: flex;
+    width: 100%;
+    margin:auto;
+}
+
+#debugger-memory-table, #debugger-stack-table, #debugger-registers-table
+{
+    width: 100%;
+}
+
+.debugger-skip-button
+{
+    margin-top:15px;
+    margin-bottom:15px;
+    color: white;
+    outline: none;
+    border: none;
+    background :var(--buttons);
+    cursor: pointer;
+    font-size: 10px;
+    font-family: fira;
+    padding-top: 0.5vh;
+    padding-bottom: 0.5vh;
+    transition: opacity 0.2s;
+    width: 15px;
+    transition: all 0.2s;
+}
+
+.debugger-skip-button:hover
+{
+    opacity:0.7;
+    background-color: rgba(255,255,255,0.2);
+}
+
+#debugger table
+{
+    font-size: 15px;
+    font-family: fira;
+    margin:auto;
+    margin-top:15px;
+    margin-bottom: 15px;
+    border-collapse: collapse;
+
+}
+
+#debugger table > thead > tr
+{
+    background: var(--border);
+}
+
+#debugger table > tbody > tr > td,
+#debugger table > thead > tr > td
+{
+    border: solid 0.2vh var(--border);
+    text-align: center;
+    padding:0.3vh;
+}
+
+.debugger-stack > thead > tr > td:first-child, 
+.debugger-stack > tbody > tr > td:first-child,
+.debugger-stack > div > thead > tr > td:first-child, 
+.debugger-stack > div > tbody > tr > td:first-child
+{
+    border-right: solid 1vh var(--border) !important;
+}
+
+
+#emulator-display
+{
+    width: 32vh;
+    height: 16vh;
+    background: black;
+}
+
+#debugger-close-button
+{
+    position: absolute;
+    right:5px;
+    top:5px;
+    width: 2vh;
+    height: 2vh;
+    background: none;
+    border:none;
+    color:white;
+    font-size: 2vh;
+    line-height: 2vh;
+    border-radius: 0.5vh;
+    transition: all 0.2s;
+}
+
+#debugger-close-button:hover
+{
+    background-color: rgba(255,255,255,0.3);
+}
+
+#debugger-keyboard {
+	border-spacing: 3px;
+	border-collapse: separate !important;
+	display: inline;
+	position: absolute;
+	top: 50%;
+	transform: translate(0%,-50%);
+	height: fit-content;
+	margin: 0 !important;
+	margin-left: 5vh !important;
+}
+
+#debugger-keyboard > tr > td
+{
+
+}
+
+#debugger-keyboard > tr > td > button
+{
+    width:30px;
+    height:30px;
+    background: var(--border);
+    border:none;
+    cursor:pointer;
+    color:white;
+    font-size: 15px;
+    font-family: fira;
 }

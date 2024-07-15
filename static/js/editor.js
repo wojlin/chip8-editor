@@ -55,9 +55,18 @@ class CodeEditor
 
         this.toRemove = {}
 
+        this.debugger = null
+
         this.addHeader();
         this.addNewLine();
         this.addHelpers();
+
+
+        this.sidePanel = document.getElementById("editor-side")
+        this.mainPanel = document.getElementById("editor-main")
+        this.separatorPanel = document.getElementById("editor-separator")
+        this.dragPanel(this.separatorPanel, this.sidePanel, this.mainPanel, "H")
+        
 
         document.addEventListener('click', function(event) 
         {
@@ -88,6 +97,74 @@ class CodeEditor
             }
         });
 
+        window.addEventListener("resize", () => {
+            document.getElementById("editor-side").style = ""
+            document.getElementById("editor-separator").style = ""
+            document.getElementById("editor-main").style = ""
+            document.getElementById("editor-wrapper").style = ""
+            document.getElementById("editor-main-separator").style = ""
+            document.getElementById("debugger").style = ""
+        });
+
+    }
+
+
+    dragPanel(element, _1, _2, direction)
+    {
+        var   md; // remember mouse down info
+        const first  = _1
+        const second = _2
+
+        element.onmousedown = onMouseDown;
+
+        function onMouseDown(e)
+        {
+            //console.log("mouse down: " + e.clientX);
+            md = {e,
+                offsetLeft:  element.offsetLeft,
+                offsetTop:   element.offsetTop,
+                firstWidth:  first.offsetWidth,
+                secondWidth: second.offsetWidth,
+                firstHeight: first.offsetHeight,
+                secondHeight: second.offsetHeight,
+                };
+
+            document.onmousemove = onMouseMove;
+            document.onmouseup = () => {
+                //console.log("mouse up");
+                document.onmousemove = document.onmouseup = null;
+            }
+        }
+
+        function onMouseMove(e)
+        {
+            //console.log("mouse move: " + e.clientX);
+            var delta = {x: e.clientX - md.e.clientX,
+                        y: e.clientY - md.e.clientY};
+
+            if (direction === "H" ) // Horizontal
+            {
+                // Prevent negative-sized elements
+                delta.x = Math.min(Math.max(delta.x, -md.firstWidth),
+                        md.secondWidth);
+
+                element.style.left = md.offsetLeft + delta.x + "px";
+                first.style.width = (md.firstWidth + delta.x) + "px";
+                second.style.width = (md.secondWidth - delta.x) + "px";
+            }
+            if (direction === "V" ) // Vertical
+            {
+                // Prevent negative-sized elements
+                delta.y = Math.min(Math.max(delta.y, -md.firstHeight),
+                        md.secondHeight);
+
+                console.log(delta.y)
+
+                element.style.top = md.offsetTop + delta.y + "px";
+                first.style.height = (md.firstHeight + delta.y) + "px";
+                second.style.height = (md.secondHeight - delta.y) + "px";
+            }
+        }
     }
 
     useInstruction(button)
@@ -483,11 +560,6 @@ class CodeEditor
         }
     }
 
-    testROM()
-    {
-        console.log("opening testing tab")
-    }
-
 
     grabEditorContent()
     {
@@ -591,8 +663,13 @@ class CodeEditor
         let rightPadding = totalPadding - leftPadding;
         return ' '.repeat(leftPadding) + str + ' '.repeat(rightPadding);
     }
-    
 
+
+    testROM()
+    {
+        console.log("opening testing tab")
+        this.debugger = new Debugger();
+    }
 
     saveAsROM()
     {
