@@ -479,3 +479,21 @@ html, body
     font-size: 15px;
     font-family: fira;
 }
+
+.current-line 
+{
+    background-color: rgba(255,255,0,0.5);
+}
+
+.changed {
+    animation: changedAnimation 0.5s;
+}
+
+@keyframes changedAnimation{
+    0%{
+      background-color: rgba(255,255,0,1);
+    }
+    100%{
+        background-color: rgba(255,255,0,0);
+    }
+  }

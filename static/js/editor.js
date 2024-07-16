@@ -536,6 +536,10 @@ class CodeEditor
             };
             reader.readAsArrayBuffer(file);
         }
+        if(this.debugger !== null && this.debugger !== undefined)
+        {
+            this.debugger.close()
+        }
     }
 
     openROM(event) {
@@ -557,6 +561,10 @@ class CodeEditor
                 }
             };
             reader.readAsArrayBuffer(file);
+        }
+        if(this.debugger !== null && this.debugger !== undefined)
+        {
+            this.debugger.close()
         }
     }
 
@@ -668,6 +676,7 @@ class CodeEditor
     testROM()
     {
         console.log("opening testing tab")
+        document.getElementById('debugger').innerHTML = ""
         this.debugger = new Debugger();
     }
 

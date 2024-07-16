@@ -1,4 +1,4 @@
-export class CHIP8
+class CHIP8
 {
 
     static DISPLAY_WIDTH = 64
@@ -61,10 +61,10 @@ export class CHIP8
     //  7	8	9	E
     //  A	0	B	F
 
-    constructor(data, screenID="", debugLoop = false, debugError = false)
+    constructor(data, screenID="", debugLoop = false, debugError = false, manualPass = false)
     {
         this.CLOCK_SPEED = 6000 // Hz
-        this.manualPass = false;
+        this.manualPass = manualPass;
         this.nextInstruction = false;
 
         this.isPlaying = false;
