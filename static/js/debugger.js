@@ -1,7 +1,69 @@
+class KeyboardMapper {
+    constructor() {
+      this.keyMap = {
+        '1': '1', '2': '2', '3': '3', '4': 'C',
+        'q': '4', 'w': '5', 'e': '6', 'r': 'D',
+        'a': '7', 's': '8', 'd': '9', 'f': 'E',
+        'z': 'A', 'x': '0', 'c': 'B', 'v': 'F'
+      };
+  
+      this.init();
+    }
+  
+    init() {
+      document.addEventListener('keydown', (event) => this.handleKeyDown(event));
+      document.addEventListener('keyup', (event) => this.handleKeyUp(event));
+    }
+  
+    handleKeyDown(event) {
+      const mappedKey = this.keyMap[event.key];
+      if (mappedKey) {
+        this.pressKey(null, mappedKey);
+      }
+    }
+  
+    handleKeyUp(event) {
+      const mappedKey = this.keyMap[event.key];
+      if (mappedKey) {
+        this.releaseKey(null, mappedKey);
+      }
+    }
+    
+    getObj(mappedKey)
+    {
+        const table = document.getElementById('debugger-keyboard');
+        const rows = table.getElementsByTagName('tr');
+        for (let i = 0; i < rows.length; i++) 
+        {
+            const cells = rows[i].getElementsByTagName('td');
+            for (let j = 0; j < cells.length; j++) 
+            {
+                if(cells[j].innerText == mappedKey)
+                {
+                    return cells[j].children[0]
+                }
+            }1
+        }
+    }
+
+    pressKey(arg1, mappedKey) {
+      console.log(`Key pressed: ${mappedKey}`);
+      editor.debugger.pressKey(this.getObj(mappedKey), mappedKey)
+    }
+  
+    releaseKey(arg1, mappedKey) {
+      console.log(`Key released: ${mappedKey}`);
+      editor.debugger.releaseKey(this.getObj(mappedKey), mappedKey)
+    }
+  }
+
+
 class Debugger
 {
     constructor()
     {   
+        this.keyboardMapper = new KeyboardMapper();
+
         this.codeTable = document.getElementById("editor-content")
         this.currentMemoryStart = 512
         this.memoryLen = 10
@@ -254,16 +316,21 @@ class Debugger
         editor.debugger = null;
     }
 
-    pressKey(key)
+    pressKey(obj, key)
     {
+        console.log(obj)
         this.keyMap[key] = true
         console.log(this.keyMap)
+        obj.classList.remove("unpressed")
+        obj.classList.add("pressed")
     }
 
-    releaseKey(key)
+    releaseKey(obj, key)
     {
         this.keyMap[key] = false
         console.log(this.keyMap)
+        obj.classList.remove("pressed")
+        obj.classList.add("unpressed")
     }
 
     /// PRIVATE
@@ -287,8 +354,9 @@ class Debugger
                 const key = keys[row][col];
                 button.id = `debugger-keyboard-${key}`;
                 button.textContent = key;
-                button.onmousedown = () => editor.debugger.pressKey(key);
-                button.onmouseup = () => editor.debugger.releaseKey(key);
+                button.onmousedown = () => editor.debugger.pressKey(button, key);
+                button.onmouseup = () => editor.debugger.releaseKey(button, key);
+                button.classList.add("unpressed")
                 td.appendChild(button);
                 tr.appendChild(td);
             }

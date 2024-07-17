@@ -485,6 +485,17 @@ html, body
     background-color: rgba(255,255,0,0.5);
 }
 
+
+.unpressed
+{
+    background-color: rgba(255,0,0,0.5) !important;
+}
+
+.pressed
+{
+    background-color: rgba(0,255,0,0.5) !important;
+}
+
 .changed {
     animation: changedAnimation 0.5s;
 }
