@@ -95,6 +95,17 @@ class Debugger
 
     /// PUBLIC
 
+
+    nextStep()
+    {
+        this.chip8.checkNextInstruction()
+    }
+
+    restart()
+    {
+        editor.testROM();
+    }
+
     memoryShift(forward = true)
     {
         
@@ -138,7 +149,7 @@ class Debugger
         for (let i = 1; i < rows.length; i++) 
         {
             rows[i].classList.remove("current-line")
-            if(i - 1 == pc - 512)
+            if(i - 1 == (pc - 512) /2)
             {
                 rows[i].classList.add("current-line")
             }
@@ -293,6 +304,20 @@ class Debugger
         this.pc = this.#createTablePC()
 
         this.timers = this.#createTableTimers()
+
+        const restart = document.createElement("button")
+        restart.classList.add("debugger-button")
+        restart.innerHTML = "restart"
+        restart.onclick = function(){editor.debugger.restart()}
+
+        const step = document.createElement("button")
+        step.classList.add("debugger-button")
+        step.innerHTML = "next step"
+        step.onclick = function(){editor.debugger.nextStep()}
+
+        otherDiv.appendChild(step)
+        otherDiv.appendChild(restart)
+
 
         
         this.closeButton = this.#createCloseButton()
