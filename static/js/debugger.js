@@ -103,6 +103,8 @@ class Debugger
 
     restart()
     {
+        this.panel.innerHTML = ""
+        editor.debugger.close();
         editor.testROM();
     }
 
@@ -335,6 +337,7 @@ class Debugger
 
     close()
     {
+        clearInterval(this.intervalId);
         this.separator.style.display = "none"
         this.panel.innerHTML = ""
         this.panel.style.display = "none"
