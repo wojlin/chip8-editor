@@ -98,6 +98,8 @@ class Debugger
 
     nextStep()
     {
+        
+
         this.chip8.checkNextInstruction()
     }
 
@@ -150,10 +152,14 @@ class Debugger
 
         for (let i = 1; i < rows.length; i++) 
         {
-            rows[i].classList.remove("current-line")
-            if(i - 1 == (pc - 512) /2)
+            
+            if(i - 1 == Math.floor((pc - 512) / 2))
             {
                 rows[i].classList.add("current-line")
+                rows[i].cells[4].children[0].focus();
+            }else
+            {
+                rows[i].classList.remove("current-line")
             }
         }
 
@@ -333,11 +339,15 @@ class Debugger
         this.keyboard = this.#createKeyboard()
 
         this.keyMap = {}
+
+        document.getElementById("editor-wrapper").style = "height:500px;";
+        document.getElementById("debugger").style = "display:block;height:500px;";
     }
 
     close()
     {
         clearInterval(this.intervalId);
+        document.getElementById("editor-wrapper").style = "";
         this.separator.style.display = "none"
         this.panel.innerHTML = ""
         this.panel.style.display = "none"

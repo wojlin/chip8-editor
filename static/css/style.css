@@ -112,7 +112,7 @@ html, body
 #editor-wrapper {
 	display: block;
 	overflow: hidden;
-	max-height: 95vh;
+	max-height: 97.5vh;
 	overflow-y: auto;
     position: relative;
 }
@@ -124,6 +124,7 @@ html, body
     background-color: var(--editor);
     font-size: 1.5vh;
     border-collapse: collapse;
+    
 }
 
 #editor-content > tbody
@@ -501,7 +502,7 @@ html, body
 }
 
 .changed {
-    animation: changedAnimation 0.5s;
+    animation: changedAnimation 2.5s;
 }
 
 @keyframes changedAnimation{
